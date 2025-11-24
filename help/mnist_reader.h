@@ -1,4 +1,8 @@
 #pragma once
+/**
+ * @file mnist_reader.h
+ * @brief Lightweight MNIST dataset reader utilities.
+ */
 
 #include <iostream>
 #include <fstream>
@@ -12,6 +16,9 @@
 #include <map>
 #include <bit>
 
+/**
+ * @brief Swap endianness of a 32-bit unsigned integer.
+ */
 inline uint32_t swap_endian(uint32_t val) {
     return ((val << 24) & 0xFF000000) |
         ((val << 8) & 0x00FF0000) |

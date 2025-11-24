@@ -1,4 +1,9 @@
 #pragma once
+/**
+ * @file layerLogger_sync.cuh
+ * @brief Synchronous alternative to layerLogger that optionally accumulates
+ *        data in memory before writing to disk.
+ */
 #include <cuda_runtime.h>
 #include <thrust/device_vector.h>
 #include <thrust/host_vector.h>
@@ -20,6 +25,10 @@ enum class Mode : uint8_t {
 constexpr Mode ACCUMULATE_AND_FINALIZE = Mode::ACCUMULATE_AND_FINALIZE;
 constexpr Mode IMMEDIATE_WRITE = Mode::IMMEDIATE_WRITE;
 
+/**
+ * @brief Logger that can immediately stream samples or accumulate trajectories
+ *        for later output.
+ */
 template<typename Layer>
 class layerLogger_sync {
 public:
@@ -65,6 +74,7 @@ public:
         if (started_) stop();
     }
 
+    /** @brief Open output files and reset internal counters. */
     void start() {
         if (started_) return;
         started_ = true;
@@ -81,6 +91,10 @@ public:
         }
     }
 
+    /**
+     * @brief Copy the current device state into host buffers and record it
+     *        based on the configured logging mode.
+     */
     void write(int step) {
         if (!started_) return;
 
@@ -97,12 +111,15 @@ public:
         steps_++;
     }
 
+    /**
+     * @brief Flush any accumulated data to disk and close output files.
+     */
     void stop() {
         if (!started_) return;
 
         if (mode_ == ACCUMULATE_AND_FINALIZE) {
             write_history_to_files(fout_state_, fout_input_);
-            std::cout << "Logger (Accumulate Mode) wrote " << N_VARS * N_ + N_ << " rows × "
+            std::cout << "Logger (Accumulate Mode) wrote " << N_VARS * N_ + N_ << " rows Ã— "
                 << steps_ << " columns.\n";
         }
 

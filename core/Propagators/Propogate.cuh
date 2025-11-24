@@ -1,4 +1,9 @@
 #pragma once
+/**
+ * @file Propogate.cuh
+ * @brief Host-side helpers for propagating activity between layers using
+ *        dense or sparse synaptic representations.
+ */
 #include "../core/genericLayer.cuh"
 #include "../core/networkBuilder.cuh"
 #include <thrust/gather.h>
@@ -13,6 +18,10 @@
 
 namespace PropagateStatic {
 
+    /**
+     * @brief Controls how newly computed inputs are combined with existing
+     *        postsynaptic buffers.
+     */
     enum class InputBehavior : uint8_t {
         INPUT_OVERRIDE = 0,   // replace post.input() with computed values
         INPUT_ADD = 1         // add computed values to post.input()
@@ -24,6 +33,10 @@ namespace PropagateStatic {
     // ==========================================================
     // ================= SPARSE PROPAGATION ======================
     // ==========================================================
+    /**
+     * @brief Propagate values from a presynaptic state vector to the
+     *        postsynaptic input buffer via sparse connections.
+     */
     template<size_t stateVar, typename PreStateTypes, typename PostStateTypes>
     void sparse_p(
         genericLayer<PreStateTypes>& preLayer,
@@ -110,6 +123,10 @@ namespace PropagateStatic {
     // ==========================================================
     // ================= FORWARD PROPAGATION =====================
     // ==========================================================
+    /**
+     * @brief Dense propagation using a full weight matrix laid out in column
+     *        major order for use with cuBLAS.
+     */
     template<size_t stateVar, typename PreStateTypes, typename PostStateTypes>
     void forward_p(
         genericLayer<PreStateTypes>& preLayer,
@@ -159,7 +176,7 @@ namespace PropagateStatic {
     void dense_p(
         genericLayer<PreStateTypes>& preLayer,
         genericLayer<PostStateTypes>& postLayer,
-        const thrust::device_vector<float>& W_flat, // column-major (N_post × N_pre)
+        const thrust::device_vector<float>& W_flat, // column-major (N_post Ã— N_pre)
         cublasHandle_t handle,
         InputBehavior behavior = INPUT_OVERRIDE,
         cudaStream_t stream = 0

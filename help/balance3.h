@@ -1,8 +1,16 @@
 #pragma once
+/**
+ * @file balance3.h
+ * @brief Utility to factor an integer into a balanced 3D grid.
+ */
 #include <tuple>
 #include <cmath>
 #include <stdexcept>
 
+/**
+ * @brief Factor N into three integers whose product equals N and whose values
+ *        are as balanced as possible.
+ */
 inline std::tuple<int, int, int> balanced3(int N) {
     if (N == 0) return { 0, 0, 0 };  // trivial edge case
 

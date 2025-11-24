@@ -1,4 +1,9 @@
 #pragma once
+/**
+ * @file SparsePropagator.cuh
+ * @brief Utilities for constructing and applying sparse propagation using
+ *        cuSPARSE CSR matrices.
+ */
 #include <cusparse_v2.h>
 #include <thrust/device_vector.h>
 #include <thrust/sort.h>
@@ -16,6 +21,9 @@
 
 #include <cuda_runtime.h>
 
+/**
+ * @brief Counts occurrences per CSR row when building compressed structures.
+ */
 struct RowCounterFunctor {
     int* rowPtr;
     __host__ __device__
@@ -26,6 +34,9 @@ struct RowCounterFunctor {
     }
 };
 
+/**
+ * @brief Behavior flags controlling whether new inputs overwrite or accumulate.
+ */
 enum class InputBehavior : uint8_t {
     INPUT_OVERRIDE = 0,
     INPUT_ADD = 1

@@ -1,4 +1,9 @@
 #pragma once
+/**
+ * @file genericLayer.cuh
+ * @brief Wrapper around collections of neuron state vectors that provides
+ *        convenient zipping utilities and RK4 stepping helpers.
+ */
 #include "../core/Solver.cuh"
 #include <thrust/device_vector.h>
 #include <thrust/for_each.h>
@@ -16,7 +21,14 @@
 #include <stdexcept>
 #include <cuda_runtime.h>
 
-template<typename StateTypes> // e.g. thrust::tuple<float,float,float>
+/**
+ * @brief Manages a layer of neurons whose state is represented by a tuple of
+ *        thrust device vectors.
+ *
+ * @tparam StateTypes A tuple type describing the per-neuron state variables
+ *                    (e.g., thrust::tuple<float,float,float>).
+ */
+template<typename StateTypes>
 class genericLayer {
 public:
     using state_tuple_type = StateTypes;
@@ -51,12 +63,15 @@ public:
     ~genericLayer() = default;
 
     // --- basic info ---
+    /** @brief Number of neurons in the layer. */
     size_t size() const noexcept { return NNeurons_; }
 
     // --- state vector access ---
+    /** @brief Mutable access to the I-th state vector. */
     template<size_t I>
     auto& state_vec() noexcept { return std::get<I>(state_); }
 
+    /** @brief Const access to the I-th state vector. */
     template<size_t I>
     const auto& state_vec() const noexcept { return std::get<I>(state_); }
 
@@ -85,6 +100,10 @@ public:
     }
 
     template<typename RHS_Functor>
+    /**
+     * @brief Advance all neuron states by one timestep using RK4 and the
+     *        provided right-hand-side functor.
+     */
     void step(const RHS_Functor& rhs, float t, float dt, cudaStream_t stream = 0) {
         auto pol = thrust::cuda::par.on(stream);
         thrust::for_each(pol,
@@ -93,7 +112,9 @@ public:
             RK4_Step_Functor<RHS_Functor, StateTypes>(t, dt, rhs));
     }
 
+    /** @brief Mutable accessor for synaptic input buffer. */
     thrust::device_vector<float>& input() noexcept { return Input_; }
+    /** @brief Const accessor for synaptic input buffer. */
     const thrust::device_vector<float>& input() const noexcept { return Input_; }
 
 private:

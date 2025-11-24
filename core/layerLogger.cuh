@@ -1,4 +1,9 @@
 #pragma once
+/**
+ * @file layerLogger.cuh
+ * @brief Asynchronous logger that streams neuron state trajectories and inputs
+ *        to CSV files using double-buffered device/host staging.
+ */
 #include <cuda_runtime.h>
 #include <thrust/device_vector.h>
 #include <thrust/host_vector.h>
@@ -14,6 +19,10 @@
 template<typename StateTypes>
 class genericLayer;
 
+/**
+ * @brief Helper class that records a layer's state vectors and input buffer to
+ *        disk without blocking the simulation stream.
+ */
 template<typename Layer>
 class layerLogger {
 public:
@@ -64,6 +73,9 @@ public:
     }
 
     // ------------------------------------------------------------
+    /**
+     * @brief Allocate staging buffers and open output CSV streams.
+     */
     void start() {
         if (started_) return;
         started_ = true;
@@ -84,6 +96,10 @@ public:
     }
 
     // ------------------------------------------------------------
+    /**
+     * @brief Schedule asynchronous copies for the given simulation step and
+     *        append buffered results to the CSV files.
+     */
     void write(int step) {
         if (!started_) return;
         const int cur = step & 1;
@@ -116,7 +132,7 @@ public:
             delete pack;
             }, new std::tuple<layerLogger*, int>(this, cur));
 
-        // 6. ensure previous buffer’s write completed before reuse
+        // 6. ensure previous bufferÂ’s write completed before reuse
         if (step > 1)
             cudaEventSynchronize(ev_ready_[prev]);
     }

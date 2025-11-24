@@ -1,3 +1,9 @@
+#pragma once
+/**
+ * @file mapInputToLSM.cuh
+ * @brief Helpers for sampling and mapping external inputs into liquid state
+ *        machine reservoirs.
+ */
 #include <iostream>
 #include <vector>
 #include <thrust/host_vector.h>
@@ -32,6 +38,9 @@ struct RandomIntGenerator {
         : rng(seed), dist(min_val, max_val) {}
 
     __host__ __device__
+        /**
+         * @brief Generate a pseudo-random integer in the configured range.
+         */
         int operator()(int) {
         return dist(rng);
     }

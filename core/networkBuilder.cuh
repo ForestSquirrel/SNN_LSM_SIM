@@ -1,4 +1,9 @@
 #pragma once
+/**
+ * @file networkBuilder.cuh
+ * @brief Generates sparse connectivity for reservoir networks and exposes
+ *        resulting matrices and index lists.
+ */
 #define __restrict
 #define EIGEN_DONT_VECTORIZE
 #define EIGEN_DISABLE_UNALIGNED_ARRAY_ASSERT
@@ -19,6 +24,10 @@
 #include <thrust/binary_search.h>
 #include <thrust/execution_policy.h>
 
+/**
+ * @brief Constructs randomized excitatory/inhibitory connectivity patterns and
+ *        associated metadata for use on host or device.
+ */
 class networkBuilder {
 public:
     std::vector<int> X, Xn;
@@ -44,6 +53,10 @@ public:
     }
 
 private:
+    /**
+     * @brief Populate connectivity matrices and neuron labels based on provided
+     *        lattice dimensions and model parameters.
+     */
     void build(
         const Eigen::Vector3i& resSize,
         const Eigen::Matrix2f& w,

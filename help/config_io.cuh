@@ -1,3 +1,9 @@
+#pragma once
+/**
+ * @file config_io.cuh
+ * @brief Binary serialization helpers for moving thrust device vectors to and
+ *        from disk.
+ */
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -12,6 +18,9 @@ using std::cout;
 using std::cerr;
 using std::endl;
 
+/**
+ * @brief Write a device vector to an already-open binary stream.
+ */
 bool save_device_vector_to_file(std::fstream& fs, const thrust::device_vector<float>& vec) {
     size_t size = vec.size();
 
@@ -33,6 +42,9 @@ bool save_device_vector_to_file(std::fstream& fs, const thrust::device_vector<fl
     return true;
 }
 
+/**
+ * @brief Read a device vector previously stored by save_device_vector_to_file.
+ */
 bool load_device_vector_from_file(std::fstream& fs, thrust::device_vector<float>& vec) {
     size_t size = 0;
 

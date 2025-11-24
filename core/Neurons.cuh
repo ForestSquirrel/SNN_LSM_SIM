@@ -1,13 +1,26 @@
 #pragma once
+/**
+ * @file Neurons.cuh
+ * @brief Collection of neuron model state definitions and their differential
+ *        equation right-hand-side functors used by the simulator kernels.
+ */
 #include <thrust/tuple.h>
 #include <cmath>
 #include <cuda_runtime.h>
 
 namespace neuronModels {
+    /**
+     * @brief Convenience tuple type used to store multiple state variables for
+     *        neuron models.
+     */
     template<typename... T>
     using StateTuple = thrust::tuple<T...>;
 
     using FHN = StateTuple<float, float>;
+
+    /**
+     * @brief FitzHugh–Nagumo neuron dynamics.
+     */
     struct FHN_RHS {
         __host__ __device__ inline
             void operator()(const FHN& state_in, FHN& ddt_out, float I_syn, float t) const {
@@ -24,6 +37,10 @@ namespace neuronModels {
 
     // ----------- O R L O V S K I I ----------
     using MemTunnerNeuron = StateTuple<float, float>;
+
+    /**
+     * @brief Memristor based tunner neuron model based on Orlovskii circuit.
+     */
     struct MemTunnerNeuron_RHS {
 
         const float U1;
@@ -60,7 +77,9 @@ namespace neuronModels {
             return Idiode(e) + Itunnel(e) + Iex(e);
         }
 
-        // AND_TS(V1, V2)
+        /**
+         * @brief Implements the AND threshold switch used to emulate memristive behavior.
+         */
         __host__ __device__ inline
             MemTunnerNeuron AND_TS(float V1, float V2) const {
             const float Ron = 2e3f;

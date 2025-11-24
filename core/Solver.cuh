@@ -1,11 +1,17 @@
 #pragma once
+/**
+ * @file Solver.cuh
+ * @brief Utilities for performing Runge-Kutta integration on neuron state tuples.
+ */
 #include <thrust/device_vector.h>
 #include <thrust/for_each.h>
 #include <thrust/tuple.h>
 #include <thrust/iterator/zip_iterator.h>
 #include <thrust/execution_policy.h>
 
-// Recursive component-wise stepper
+/**
+ * @brief Apply a single scaled k-step to each element of a tuple state.
+ */
 template <size_t I, typename State>
 __host__ __device__ inline void apply_k_step(State& next_state,
                                              const State& current_state,
@@ -19,6 +25,10 @@ __host__ __device__ inline void apply_k_step(State& next_state,
     }
 }
 
+/**
+ * @brief Accumulate the final weighted combination of Runge-Kutta slopes
+ *        into the state tuple.
+ */
 template <size_t I, typename State>
 __host__ __device__ inline void apply_last_step(State& current_state,
                                                 const State& k1, const State& k2,
@@ -33,6 +43,10 @@ __host__ __device__ inline void apply_last_step(State& current_state,
     }
 }
 
+/**
+ * @brief Functor implementing one RK4 step for a zipped tuple of
+ *        state vectors and synaptic input values.
+ */
 template<typename RHS, typename State>
 struct RK4_Step_Functor {
     static constexpr size_t M = thrust::tuple_size<State>::value;

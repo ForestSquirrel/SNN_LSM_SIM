@@ -1,7 +1,14 @@
 #pragma once
+/**
+ * @file progresBar.h
+ * @brief Console helpers for rendering single and nested progress bars.
+ */
 #include <iostream>
 #include <iomanip>
 
+/**
+ * @brief Render a simple progress bar to stdout.
+ */
 inline void print_progress(int current, int total, int width = 50) {
     static int last_progress_chars = -1;
     static int last_percent = -1;
@@ -29,6 +36,10 @@ inline void print_progress(int current, int total, int width = 50) {
     }
 }
 
+/**
+ * @brief Display a two-level progress indicator where an outer loop contains
+ *        an inner batch loop.
+ */
 inline void print_nested_progress(
     int i_current, int i_total,
     int j_current, int j_total,

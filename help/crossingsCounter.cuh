@@ -1,4 +1,8 @@
 #pragma once
+/**
+ * @file crossingsCounter.cuh
+ * @brief Utilities to count threshold crossings in neuron state trajectories.
+ */
 #include <cuda_runtime.h>
 #include <thrust/device_vector.h>
 #include <thrust/transform.h>
@@ -24,6 +28,10 @@ enum class CounterBehavior : uint8_t {
 };
 
 template <typename T>
+/**
+ * @brief Functor that returns 1 when the provided state pair crosses the
+ *        configured threshold according to the selected behavior.
+ */
 struct crossing_functor {
     const T threshold_;
     const CounterBehavior behavior_;
