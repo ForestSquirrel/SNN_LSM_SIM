@@ -4,9 +4,11 @@
 #include <stdexcept>
 
 /**
- * @brief Factorizes an integer into a balanced 3D lattice (a <= b <= c).
+ * Factorizes an integer into a balanced 3D lattice (a <= b <= c).
  * @param N Number of elements to distribute.
  * @return Tuple of three factors whose product equals N.
+ * 
+ * @ingroup utilities
  */
 inline std::tuple<int, int, int> balanced3(int N) {
     if (N == 0) return { 0, 0, 0 };  // trivial edge case

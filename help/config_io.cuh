@@ -13,10 +13,12 @@ using std::cerr;
 using std::endl;
 
 /**
- * @brief Writes a device vector to a binary stream.
+ * Writes a device vector to a binary stream.
  * @param fs Output file stream.
  * @param vec Vector to serialize.
  * @return true on success.
+ * 
+ * @ingroup utilities
  */
 bool save_device_vector_to_file(std::fstream& fs, const thrust::device_vector<float>& vec) {
     size_t size = vec.size();
@@ -40,10 +42,12 @@ bool save_device_vector_to_file(std::fstream& fs, const thrust::device_vector<fl
 }
 
 /**
- * @brief Reads a device vector from a binary stream.
+ * Reads a device vector from a binary stream.
  * @param fs Input file stream.
  * @param vec Destination vector populated from disk.
  * @return true on success.
+ * 
+ * @ingroup utilities
  */
 bool load_device_vector_from_file(std::fstream& fs, thrust::device_vector<float>& vec) {
     size_t size = 0;
@@ -72,7 +76,7 @@ bool load_device_vector_from_file(std::fstream& fs, thrust::device_vector<float>
 
 
 /**
- * @brief Saves six Thrust device vectors to a binary configuration file.
+ * Saves six Thrust device vectors to a binary configuration file.
  *
  * @param fileName The path to the file.
  * @param ILSM_Xpre Input vector 1.
@@ -82,6 +86,8 @@ bool load_device_vector_from_file(std::fstream& fs, thrust::device_vector<float>
  * @param LSM_Xpost Input vector 5.
  * @param LSM_W Input vector 6.
  * @return true if successful, false otherwise.
+ * 
+ * @ingroup lsm_utils
  */
 bool saveLSM(
     string fileName,
@@ -127,7 +133,7 @@ bool saveLSM(
 }
 
 /**
- * @brief Loads six Thrust device vectors from a binary configuration file.
+ * Loads six Thrust device vectors from a binary configuration file.
  *
  * @param fileName The path to the file.
  * @param ILSM_Xpre Output vector 1 (modified by reference).
@@ -137,6 +143,8 @@ bool saveLSM(
  * @param LSM_Xpost Output vector 5 (modified by reference).
  * @param LSM_W Output vector 6 (modified by reference).
  * @return true if successful, false otherwise.
+ * 
+ * @ingroup lsm_utils
  */
 bool loadLSM(
     string fileName,
@@ -182,9 +190,11 @@ bool loadLSM(
 }
 
 /**
- * @brief Prints basic information about a device vector.
+ * Prints basic information about a device vector.
  * @param vec Vector to inspect.
  * @param name Label used in the output.
+ * 
+ * @ingroup utilities
  */
 void print_device_vector(const thrust::device_vector<float>& vec, const string& name) {
     if (vec.empty()) {

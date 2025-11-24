@@ -1,0 +1,39 @@
+title: Docs
+description: 
+files:
+  - "*.hpp"
+  - "**/*.hpp"
+  - "*.h"
+  - "**/*.h"
+  - "*.cuh"
+  - "**/*.cuh"
+groups:
+  - name: solvers
+    title: Solvers
+    description: Collection of numerical solvers
+  - name: utilities
+    title: Utilities
+    description: Helper functions and utilities
+  - name: network
+    title: Network Components
+    description: Neural network layers and components
+    groups:
+      - name: propagators
+        title: Signal propagation
+        description: Components for propagating signals through network
+        groups:
+          - name: sparse_propagators
+            title: Sparse Propagators
+            description: Components for sparse signal propagation
+          - name: deprecated
+            title: Deprecated Propagators
+            description: Outdated signal propagation components
+  - name: trackers
+    title: Trackers
+    description: Data tracking and logging tools
+  - name: datasets
+    title: Datasets
+    description: Dataset handling and processing
+  - name: lsm_utils
+    title: LSM Utilities
+    description: Utilities specific to Liquid State Machines

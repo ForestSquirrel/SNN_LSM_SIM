@@ -27,7 +27,9 @@ struct RowCounterFunctor {
 };
 
 /**
- * @brief Defines how SpMV results are merged into the destination input buffer.
+ * Defines how SpMV results are merged into the destination input buffer.
+ * 
+ * @ingroup sparse_propagators
  */
 enum class InputBehavior : uint8_t {
     INPUT_OVERRIDE = 0,
@@ -39,7 +41,9 @@ template <typename StateTypes>
 class genericLayer;
 
 /**
- * @brief RAII wrapper for cuSPARSE SpMV propagation with prebuilt CSR matrices.
+ * RAII wrapper for cuSPARSE SpMV propagation with prebuilt CSR matrices.
+ * 
+ * @ingroup sparse_propagators
  */
 class SparsePropagator {
 private:
@@ -107,7 +111,7 @@ public:
     ~SparsePropagator() { destroy(); }
 
     /**
-     * @brief Initializes the cuSPARSE handle if it has not been created.
+     * Initializes the cuSPARSE handle if it has not been created.
      */
     void init() {
         if (initialized_) return;
@@ -116,7 +120,7 @@ public:
     }
 
     /**
-     * @brief Releases allocated matrices and destroys the cuSPARSE handle.
+     * Releases allocated matrices and destroys the cuSPARSE handle.
      */
     void destroy() {
         if (!initialized_) return;
@@ -128,10 +132,10 @@ public:
     }
 
     /**
-     * @brief Build CSR from (Xn, X, W) triplets.
+     * Build CSR from (Xn, X, W) triplets.
      */
     /**
-     * @brief Build CSR from (Xn, X, W) triplets.
+     * Build CSR from (Xn, X, W) triplets.
      * @param X Presynaptic indices.
      * @param Xn Postsynaptic indices.
      * @param W Connection weights.
@@ -206,10 +210,10 @@ public:
     }
 
     /**
-     * @brief Propagate preLayer state -> postLayer input using a named CSR.
+     * Propagate preLayer state -> postLayer input using a named CSR.
      */
     /**
-     * @brief Propagate preLayer state -> postLayer input using a named CSR.
+     * Propagate preLayer state -> postLayer input using a named CSR.
      * @tparam stateVar Index of the presynaptic state variable to propagate.
      * @tparam PreStateTypes Tuple type for the presynaptic layer.
      * @tparam PostStateTypes Tuple type for the postsynaptic layer.

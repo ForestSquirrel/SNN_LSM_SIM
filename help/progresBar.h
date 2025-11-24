@@ -3,10 +3,12 @@
 #include <iomanip>
 
 /**
- * @brief Renders a single-line progress bar.
+ * Renders a single-line progress bar.
  * @param current Current progress count.
  * @param total Total count representing 100%.
  * @param width Width of the bar in characters.
+ * 
+ * @ingroup utilities
  */
 inline void print_progress(int current, int total, int width = 50) {
     static int last_progress_chars = -1;
@@ -36,7 +38,7 @@ inline void print_progress(int current, int total, int width = 50) {
 }
 
 /**
- * @brief Renders two-level nested progress bars in-place.
+ * Renders two-level nested progress bars in-place.
  * @param i_current Outer loop current iteration.
  * @param i_total Outer loop total iterations.
  * @param j_current Inner loop current iteration.
@@ -44,6 +46,8 @@ inline void print_progress(int current, int total, int width = 50) {
  * @param width Width of each bar in characters.
  * @param outer_text Label for the outer bar.
  * @param inner_text Label for the inner bar.
+ * 
+ * @ingroup utilities
  */
 inline void print_nested_progress(
     int i_current, int i_total,

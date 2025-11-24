@@ -14,7 +14,8 @@
 namespace PropagateStatic {
 
     /**
-     * @brief Determines how computed inputs are combined with existing buffers.
+     * Determines how computed inputs are combined with existing buffers.
+     * @ingroup deprecated
      */
     enum class InputBehavior : uint8_t {
         INPUT_OVERRIDE = 0,   // replace post.input() with computed values
@@ -28,7 +29,7 @@ namespace PropagateStatic {
     // ================= SPARSE PROPAGATION ======================
     // ==========================================================
     /**
-     * @brief Sparse propagation using explicit edge lists.
+     * Sparse propagation using explicit edge lists.
      * @tparam stateVar Index of the presynaptic state variable to propagate.
      * @tparam PreStateTypes Tuple type for the presynaptic layer.
      * @tparam PostStateTypes Tuple type for the postsynaptic layer.
@@ -39,6 +40,8 @@ namespace PropagateStatic {
      * @param W Connection weights.
      * @param behavior Input accumulation behavior.
      * @param stream CUDA stream for execution.
+     * 
+     * @ingroup deprecated
      */
     template<size_t stateVar, typename PreStateTypes, typename PostStateTypes>
     void sparse_p(
@@ -127,7 +130,7 @@ namespace PropagateStatic {
     // ================= FORWARD PROPAGATION =====================
     // ==========================================================
     /**
-     * @brief One-to-one propagation (diagonal weight vector).
+     * One-to-one propagation (diagonal weight vector).
      * @tparam stateVar Index of the presynaptic state variable to propagate.
      * @tparam PreStateTypes Tuple type for the presynaptic layer.
      * @tparam PostStateTypes Tuple type for the postsynaptic layer.
@@ -136,6 +139,8 @@ namespace PropagateStatic {
      * @param W Weight vector aligned with neuron indices.
      * @param behavior Input accumulation behavior.
      * @param stream CUDA stream for execution.
+     * 
+     * @ingroup deprecated
      */
     template<size_t stateVar, typename PreStateTypes, typename PostStateTypes>
     void forward_p(
@@ -183,7 +188,7 @@ namespace PropagateStatic {
     // ================= DENSE PROPAGATION =======================
     // ==========================================================
     /**
-     * @brief Dense matrix propagation using cuBLAS sgemv.
+     * Dense matrix propagation using cuBLAS sgemv.
      * @tparam stateVar Index of the presynaptic state variable to propagate.
      * @tparam PreStateTypes Tuple type for the presynaptic layer.
      * @tparam PostStateTypes Tuple type for the postsynaptic layer.
@@ -193,6 +198,8 @@ namespace PropagateStatic {
      * @param handle cuBLAS handle.
      * @param behavior Input accumulation behavior.
      * @param stream CUDA stream for execution.
+     * 
+     * @ingroup deprecated
      */
     template<size_t stateVar, typename PreStateTypes, typename PostStateTypes>
     void dense_p(

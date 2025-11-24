@@ -15,7 +15,9 @@
 template<typename StateTypes> class genericLayer;
 
 /**
- * @brief Defines the type of threshold crossing to count.
+ * Defines the type of threshold crossing to count.
+ * 
+ * @ingroup trackers
  */
 enum class CounterBehavior : uint8_t {
     BELOW_THR = 0,   // Transition from value < thr to value >= thr
@@ -62,9 +64,11 @@ struct crossing_functor {
 };
 
 /**
- * @brief Counts threshold crossings for a specific state variable in a layer.
+ * Counts threshold crossings for a specific state variable in a layer.
  * @tparam Layer Layer type exposing state_tuple_type.
  * @tparam I Index of the state variable to monitor.
+ * 
+ * @ingroup trackers
  */
 template<typename Layer, size_t I>
 class crossingsCounter {
@@ -86,7 +90,7 @@ public:
     const thrust::device_vector<int>& crossings = d_crossings_;
 
     /**
-     * @brief Constructor for the crossingsCounter.
+     * Constructor for the crossingsCounter.
      * @param layer The reference to the simulation layer.
      * @param threshold The value a state must cross to be counted.
      * @param behavior The type of crossing to count (BELOW_THR, ABOVE_THR, BIDIRECTIONAL).
@@ -115,7 +119,7 @@ public:
     }
 
     /**
-     * @brief Performs the crossing count for the current step.
+     * Performs the crossing count for the current step.
      * @param step The current simulation step number.
      */
     void count(int step) {
@@ -148,7 +152,7 @@ public:
     }
 
     /**
-     * @brief Resets the crossing counts to zero.
+     * Resets the crossing counts to zero.
      */
     void reset() {
         if (!initialized_) return;
@@ -156,7 +160,7 @@ public:
     }
 
     /**
-     * @brief Cleans up device memory.
+     * Cleans up device memory.
      */
     void destroy() {
         if (initialized_) {

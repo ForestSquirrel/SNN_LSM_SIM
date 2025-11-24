@@ -13,9 +13,11 @@
 #include <bit>
 
 /**
- * @brief Swaps byte order for 32-bit integers (big-endian <-> little-endian).
+ * Swaps byte order for 32-bit integers (big-endian <-> little-endian).
  * @param val Value to swap.
  * @return Reordered integer.
+ * 
+ * @ingroup datasets
  */
 inline uint32_t swap_endian(uint32_t val) {
     return ((val << 24) & 0xFF000000) |
@@ -25,8 +27,10 @@ inline uint32_t swap_endian(uint32_t val) {
 }
 
 /**
- * @brief Minimal MNIST dataset loader supporting sorting and splitting utilities.
+ * Minimal MNIST dataset loader supporting sorting and splitting utilities.
  * @tparam T Numeric type used to store pixel values.
+ * 
+ * @ingroup datasets
  */
 template <typename T>
 class MNIST {

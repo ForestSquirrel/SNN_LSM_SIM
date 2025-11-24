@@ -20,7 +20,9 @@
 #include <thrust/execution_policy.h>
 
 /**
- * @brief Generates reservoir connectivity, weights, and metadata for the LSM.
+ * Generates reservoir connectivity, weights, and metadata for the LSM.
+ * 
+ * @ingroup lsm_utils
  */
 class networkBuilder {
 public:
@@ -32,7 +34,7 @@ public:
 
     // UC: flattened 3D pattern, dims = {x, y, z}
     /**
-     * @brief Constructs a network with randomized excitatory/inhibitory distribution and geometry.
+     * Constructs a network with randomized excitatory/inhibitory distribution and geometry.
      * @param resSize Reservoir dimensions.
      * @param w Weight matrix for E/I combinations.
      * @param r0 Spatial decay radius.
@@ -61,7 +63,7 @@ public:
 
 private:
     /**
-     * @brief Builds connectivity, weights, and delays based on geometry.
+     * Builds connectivity, weights, and delays based on geometry.
      * @param resSize Reservoir dimensions.
      * @param w Weight matrix for E/I combinations.
      * @param r0 Spatial decay radius.
@@ -218,7 +220,7 @@ private:
     }
 
     /**
-     * @brief Normalizes weights by the number of incoming connections per target neuron.
+     * Normalizes weights by the number of incoming connections per target neuron.
      * @param X Source indices for each connection.
      * @param Xn Destination indices for each connection.
      * @param W Unnormalized weights.
@@ -263,7 +265,7 @@ private:
     }
 
     /**
-     * @brief Populates lists of excitatory and inhibitory neuron indices.
+     * Populates lists of excitatory and inhibitory neuron indices.
      */
     void compute_EI_indices() {
         eIndices.clear();

@@ -14,10 +14,11 @@
 #include <algorithm>
 
 /**
- * @brief Defines the selection mode for the random sampling.
- */
-/**
- * @brief Selection strategy for mapping inputs to reservoir neurons.
+ * Defines the selection mode for the random sampling.
+ *
+ * Selection strategy for mapping inputs to reservoir neurons.
+ * 
+ * @ingroup lsm_utils
  */
 enum class SelectionMode {
     /** The same element from the indices vector can be selected multiple times (sampling with replacement). */
@@ -43,13 +44,15 @@ struct RandomIntGenerator {
 // ---------------------------------------------------
 
 /**
- * @brief Maps input channels to reservoir neurons using random selection.
+ * Maps input channels to reservoir neurons using random selection.
  * @param iN Number of input connections to generate.
  * @param indices_h Host vector of candidate neuron indices.
  * @param mode SelectionMode specifying replacement behavior.
  * @param X_d Output presynaptic indices (0..iN-1).
  * @param Xn_d Output postsynaptic indices sampled from indices_h.
  * @return true on success, false when constraints are violated.
+ * 
+ * @ingroup lsm_utils
  */
 bool mapInputToLSM(
     int iN,

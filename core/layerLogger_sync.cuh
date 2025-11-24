@@ -21,8 +21,10 @@ constexpr Mode ACCUMULATE_AND_FINALIZE = Mode::ACCUMULATE_AND_FINALIZE;
 constexpr Mode IMMEDIATE_WRITE = Mode::IMMEDIATE_WRITE;
 
 /**
- * @brief Synchronous logger optionally buffering data before writing to CSV.
+ * Synchronous logger optionally buffering data before writing to CSV.
  * @tparam Layer Layer type exposing state_tuple_type and input buffers.
+ * 
+ * @ingroup trackers
  */
 template<typename Layer>
 class layerLogger_sync {
@@ -50,7 +52,7 @@ private:
 
 public:
     /**
-     * @brief Constructs the synchronous logger.
+     * Constructs the synchronous logger.
      * @param layer Layer to observe.
      * @param name Base filename for CSV outputs.
      * @param mode Logging mode controlling buffering behavior.
@@ -76,7 +78,7 @@ public:
     }
 
     /**
-     * @brief Opens output streams and prepares internal buffers.
+     * Opens output streams and prepares internal buffers.
      */
     void start() {
         if (started_) return;
@@ -95,7 +97,7 @@ public:
     }
 
     /**
-     * @brief Copies current layer state and writes or buffers it.
+     * Copies current layer state and writes or buffers it.
      * @param step Current simulation step index.
      */
     void write(int step) {
@@ -115,7 +117,7 @@ public:
     }
 
     /**
-     * @brief Flushes buffered data and closes files.
+     * Flushes buffered data and closes files.
      */
     void stop() {
         if (!started_) return;

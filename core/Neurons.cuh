@@ -4,19 +4,19 @@
 #include <cuda_runtime.h>
 
 /**
- * @brief Collection of neuron model state representations and right-hand side functors.
+ * Collection of neuron model state representations and right-hand side functors.
  */
 namespace neuronModels {
     template<typename... T>
     using StateTuple = thrust::tuple<T...>;
 
     /**
-     * @brief State tuple for the FitzHugh–Nagumo model (u, v).
+     * State tuple for the FitzHugh–Nagumo model (u, v).
      */
     using FHN = StateTuple<float, float>;
 
     /**
-     * @brief Right-hand side functor for the FitzHugh–Nagumo neuron dynamics.
+     * Right-hand side functor for the FitzHugh–Nagumo neuron dynamics.
      * @see FHN
      */
     struct FHN_RHS {
@@ -35,12 +35,12 @@ namespace neuronModels {
 
     // ----------- O R L O V S K I I ----------
     /**
-     * @brief State tuple for the memristor-based tunneling neuron (Vc, XSV).
+     * State tuple for the memristor-based tunneling neuron (Vc, XSV).
      */
     using MemTunnerNeuron = StateTuple<float, float>;
 
     /**
-     * @brief Right-hand side functor for the memristor tunneling neuron model.
+     * Right-hand side functor for the memristor tunneling neuron model.
      * @see MemTunnerNeuron
      */
     struct MemTunnerNeuron_RHS {
@@ -54,7 +54,7 @@ namespace neuronModels {
             : U1(u1), U2(u2), C1_scaled(c1 * 1e-6f) {}
 
         /**
-         * @brief Computes the diode/tunnel current contribution.
+         * Computes the diode/tunnel current contribution.
          * @param e Diode voltage.
          * @return Combined current through the device.
          */
@@ -86,7 +86,7 @@ namespace neuronModels {
 
         // AND_TS(V1, V2)
         /**
-         * @brief Calculates memristor branch current and state derivative.
+         * Calculates memristor branch current and state derivative.
          * @param V1 Membrane voltage.
          * @param V2 State variable representing conductance fraction.
          * @return Pair of memristor current and state change.
@@ -124,7 +124,7 @@ namespace neuronModels {
 
 
         /**
-         * @brief Evaluates time derivatives for the memristor neuron.
+         * Evaluates time derivatives for the memristor neuron.
          * @param state_in Current state tuple (Vc, XSV).
          * @param ddt_out Output derivatives.
          * @param I_syn Input synaptic current.
