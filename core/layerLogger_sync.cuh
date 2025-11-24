@@ -20,6 +20,10 @@ enum class Mode : uint8_t {
 constexpr Mode ACCUMULATE_AND_FINALIZE = Mode::ACCUMULATE_AND_FINALIZE;
 constexpr Mode IMMEDIATE_WRITE = Mode::IMMEDIATE_WRITE;
 
+/**
+ * @brief Synchronous logger optionally buffering data before writing to CSV.
+ * @tparam Layer Layer type exposing state_tuple_type and input buffers.
+ */
 template<typename Layer>
 class layerLogger_sync {
 public:
@@ -45,6 +49,12 @@ private:
     bool started_ = false;
 
 public:
+    /**
+     * @brief Constructs the synchronous logger.
+     * @param layer Layer to observe.
+     * @param name Base filename for CSV outputs.
+     * @param mode Logging mode controlling buffering behavior.
+     */
     layerLogger_sync(Layer& layer, const std::string& name, Mode mode = ACCUMULATE_AND_FINALIZE)
         : layer_(layer), baseName_(name), mode_(mode)
     {
@@ -65,6 +75,9 @@ public:
         if (started_) stop();
     }
 
+    /**
+     * @brief Opens output streams and prepares internal buffers.
+     */
     void start() {
         if (started_) return;
         started_ = true;
@@ -81,6 +94,10 @@ public:
         }
     }
 
+    /**
+     * @brief Copies current layer state and writes or buffers it.
+     * @param step Current simulation step index.
+     */
     void write(int step) {
         if (!started_) return;
 
@@ -97,12 +114,15 @@ public:
         steps_++;
     }
 
+    /**
+     * @brief Flushes buffered data and closes files.
+     */
     void stop() {
         if (!started_) return;
 
         if (mode_ == ACCUMULATE_AND_FINALIZE) {
             write_history_to_files(fout_state_, fout_input_);
-            std::cout << "Logger (Accumulate Mode) wrote " << N_VARS * N_ + N_ << " rows × "
+            std::cout << "Logger (Accumulate Mode) wrote " << N_VARS * N_ + N_ << " rows Ã— "
                 << steps_ << " columns.\n";
         }
 

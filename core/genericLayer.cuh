@@ -16,6 +16,10 @@
 #include <stdexcept>
 #include <cuda_runtime.h>
 
+/**
+ * @brief Generic layer wrapper holding neuron states and inputs.
+ * @tparam StateTypes Thrust tuple describing the per-neuron state variables.
+ */
 template<typename StateTypes> // e.g. thrust::tuple<float,float,float>
 class genericLayer {
 public:
@@ -38,6 +42,10 @@ private:
     decltype(make_state_tuple(0, std::make_index_sequence<N_VECTORS>{})) state_;
 
 public:
+    /**
+     * @brief Constructs a layer with the given neuron count.
+     * @param N Number of neurons/states to allocate.
+     */
     explicit genericLayer(size_t N)
         : NNeurons_(N)
         , Input_(N, 0.0f)
@@ -51,6 +59,9 @@ public:
     ~genericLayer() = default;
 
     // --- basic info ---
+    /**
+     * @brief Returns the number of neurons in the layer.
+     */
     size_t size() const noexcept { return NNeurons_; }
 
     // --- state vector access ---
@@ -93,7 +104,16 @@ public:
             RK4_Step_Functor<RHS_Functor, StateTypes>(t, dt, rhs));
     }
 
+    /**
+     * @brief Access the input buffer for modification.
+     * @return Reference to the device vector storing input currents.
+     */
     thrust::device_vector<float>& input() noexcept { return Input_; }
+
+    /**
+     * @brief Access the input buffer (read-only).
+     * @return Const reference to the device vector storing input currents.
+     */
     const thrust::device_vector<float>& input() const noexcept { return Input_; }
 
 private:

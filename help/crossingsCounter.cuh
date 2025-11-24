@@ -61,6 +61,11 @@ struct crossing_functor {
     }
 };
 
+/**
+ * @brief Counts threshold crossings for a specific state variable in a layer.
+ * @tparam Layer Layer type exposing state_tuple_type.
+ * @tparam I Index of the state variable to monitor.
+ */
 template<typename Layer, size_t I>
 class crossingsCounter {
 public:

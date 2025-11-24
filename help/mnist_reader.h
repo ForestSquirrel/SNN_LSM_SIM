@@ -12,6 +12,11 @@
 #include <map>
 #include <bit>
 
+/**
+ * @brief Swaps byte order for 32-bit integers (big-endian <-> little-endian).
+ * @param val Value to swap.
+ * @return Reordered integer.
+ */
 inline uint32_t swap_endian(uint32_t val) {
     return ((val << 24) & 0xFF000000) |
         ((val << 8) & 0x00FF0000) |
@@ -19,6 +24,10 @@ inline uint32_t swap_endian(uint32_t val) {
         ((val >> 24) & 0x000000FF);
 }
 
+/**
+ * @brief Minimal MNIST dataset loader supporting sorting and splitting utilities.
+ * @tparam T Numeric type used to store pixel values.
+ */
 template <typename T>
 class MNIST {
     static_assert(std::is_arithmetic<T>::value, "Template parameter T must be numeric.");
