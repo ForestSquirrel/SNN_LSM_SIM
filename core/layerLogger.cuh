@@ -14,6 +14,10 @@
 template<typename StateTypes>
 class genericLayer;
 
+/**
+ * @brief Asynchronous logger that records layer states and inputs to CSV files.
+ * @tparam Layer Layer type exposing state_tuple_type and input buffers.
+ */
 template<typename Layer>
 class layerLogger {
 public:
@@ -38,6 +42,13 @@ private:
     bool started_ = false;
 
 public:
+    /**
+     * @brief Constructs the logger with simulation and IO streams.
+     * @param layer Layer to observe.
+     * @param streamSim CUDA stream used by the simulation.
+     * @param streamIO CUDA stream used for IO operations.
+     * @param name Base file name for generated CSVs.
+     */
     layerLogger(Layer& layer,
         cudaStream_t streamSim,
         cudaStream_t streamIO,
@@ -64,6 +75,9 @@ public:
     }
 
     // ------------------------------------------------------------
+    /**
+     * @brief Allocates buffers and opens CSV outputs.
+     */
     void start() {
         if (started_) return;
         started_ = true;
@@ -84,6 +98,10 @@ public:
     }
 
     // ------------------------------------------------------------
+    /**
+     * @brief Schedules a logging operation for the given simulation step.
+     * @param step Current simulation step index.
+     */
     void write(int step) {
         if (!started_) return;
         const int cur = step & 1;
@@ -116,12 +134,15 @@ public:
             delete pack;
             }, new std::tuple<layerLogger*, int>(this, cur));
 
-        // 6. ensure previous buffer’s write completed before reuse
+        // 6. ensure previous bufferÂ’s write completed before reuse
         if (step > 1)
             cudaEventSynchronize(ev_ready_[prev]);
     }
 
     // ------------------------------------------------------------
+    /**
+     * @brief Flushes and closes files, ensuring pending copies finish.
+     */
     void stop() {
         if (!started_) return;
         cudaStreamSynchronize(streamIO_);

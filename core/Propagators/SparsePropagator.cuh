@@ -26,6 +26,9 @@ struct RowCounterFunctor {
     }
 };
 
+/**
+ * @brief Defines how SpMV results are merged into the destination input buffer.
+ */
 enum class InputBehavior : uint8_t {
     INPUT_OVERRIDE = 0,
     INPUT_ADD = 1
@@ -103,12 +106,18 @@ public:
     SparsePropagator() = default;
     ~SparsePropagator() { destroy(); }
 
+    /**
+     * @brief Initializes the cuSPARSE handle if it has not been created.
+     */
     void init() {
         if (initialized_) return;
         cusparseCreate(&handle_);
         initialized_ = true;
     }
 
+    /**
+     * @brief Releases allocated matrices and destroys the cuSPARSE handle.
+     */
     void destroy() {
         if (!initialized_) return;
         for (auto& kv : mats_)
@@ -120,6 +129,16 @@ public:
 
     /**
      * @brief Build CSR from (Xn, X, W) triplets.
+     */
+    /**
+     * @brief Build CSR from (Xn, X, W) triplets.
+     * @param X Presynaptic indices.
+     * @param Xn Postsynaptic indices.
+     * @param W Connection weights.
+     * @param name Key used to reference the built matrix.
+     * @param num_pre Number of presynaptic neurons.
+     * @param num_post Number of postsynaptic neurons.
+     * @param stream CUDA stream for preprocessing.
      */
     void buildCSR(const thrust::device_vector<int>& X,
         const thrust::device_vector<int>& Xn,
@@ -188,6 +207,17 @@ public:
 
     /**
      * @brief Propagate preLayer state -> postLayer input using a named CSR.
+     */
+    /**
+     * @brief Propagate preLayer state -> postLayer input using a named CSR.
+     * @tparam stateVar Index of the presynaptic state variable to propagate.
+     * @tparam PreStateTypes Tuple type for the presynaptic layer.
+     * @tparam PostStateTypes Tuple type for the postsynaptic layer.
+     * @param preLayer Source layer.
+     * @param postLayer Destination layer.
+     * @param name Key of the CSR matrix to use.
+     * @param behavior Input accumulation behavior.
+     * @param stream CUDA stream for the SpMV call.
      */
     template<size_t stateVar, typename PreStateTypes, typename PostStateTypes>
     void propagate(genericLayer<PreStateTypes>& preLayer,

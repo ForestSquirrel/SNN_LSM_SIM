@@ -3,11 +3,22 @@
 #include <cmath>
 #include <cuda_runtime.h>
 
+/**
+ * @brief Collection of neuron model state representations and right-hand side functors.
+ */
 namespace neuronModels {
     template<typename... T>
     using StateTuple = thrust::tuple<T...>;
 
+    /**
+     * @brief State tuple for the FitzHugh–Nagumo model (u, v).
+     */
     using FHN = StateTuple<float, float>;
+
+    /**
+     * @brief Right-hand side functor for the FitzHugh–Nagumo neuron dynamics.
+     * @see FHN
+     */
     struct FHN_RHS {
         __host__ __device__ inline
             void operator()(const FHN& state_in, FHN& ddt_out, float I_syn, float t) const {
@@ -23,7 +34,15 @@ namespace neuronModels {
     };
 
     // ----------- O R L O V S K I I ----------
+    /**
+     * @brief State tuple for the memristor-based tunneling neuron (Vc, XSV).
+     */
     using MemTunnerNeuron = StateTuple<float, float>;
+
+    /**
+     * @brief Right-hand side functor for the memristor tunneling neuron model.
+     * @see MemTunnerNeuron
+     */
     struct MemTunnerNeuron_RHS {
 
         const float U1;
@@ -34,6 +53,11 @@ namespace neuronModels {
             MemTunnerNeuron_RHS(float u1, float u2, float c1)
             : U1(u1), U2(u2), C1_scaled(c1 * 1e-6f) {}
 
+        /**
+         * @brief Computes the diode/tunnel current contribution.
+         * @param e Diode voltage.
+         * @return Combined current through the device.
+         */
         __host__ __device__ inline
             float GI403(float e) const {
             const float Is = 1.1E-7f;
@@ -61,6 +85,12 @@ namespace neuronModels {
         }
 
         // AND_TS(V1, V2)
+        /**
+         * @brief Calculates memristor branch current and state derivative.
+         * @param V1 Membrane voltage.
+         * @param V2 State variable representing conductance fraction.
+         * @return Pair of memristor current and state change.
+         */
         __host__ __device__ inline
             MemTunnerNeuron AND_TS(float V1, float V2) const {
             const float Ron = 2e3f;
@@ -93,6 +123,13 @@ namespace neuronModels {
         }
 
 
+        /**
+         * @brief Evaluates time derivatives for the memristor neuron.
+         * @param state_in Current state tuple (Vc, XSV).
+         * @param ddt_out Output derivatives.
+         * @param I_syn Input synaptic current.
+         * @param t Current simulation time (unused).
+         */
         __host__ __device__ inline
             void operator()(const MemTunnerNeuron& state_in, MemTunnerNeuron& ddt_out, float I_syn, float t) const {
             float X_1 = thrust::get<0>(state_in); // Vc

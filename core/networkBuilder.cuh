@@ -19,6 +19,9 @@
 #include <thrust/binary_search.h>
 #include <thrust/execution_policy.h>
 
+/**
+ * @brief Generates reservoir connectivity, weights, and metadata for the LSM.
+ */
 class networkBuilder {
 public:
     std::vector<int> X, Xn;
@@ -28,6 +31,19 @@ public:
     std::vector<int> iIndices;  // indices of inhibitory neurons
 
     // UC: flattened 3D pattern, dims = {x, y, z}
+    /**
+     * @brief Constructs a network with randomized excitatory/inhibitory distribution and geometry.
+     * @param resSize Reservoir dimensions.
+     * @param w Weight matrix for E/I combinations.
+     * @param r0 Spatial decay radius.
+     * @param k0 Connection probability coefficients.
+     * @param f_inhibit Fraction of inhibitory neurons.
+     * @param tau Synaptic delay scaling.
+     * @param show Deprecated flag (ignored).
+     * @param UC Optional user-defined pattern.
+     * @param UC_dims Dimensions of the user pattern.
+     * @param _normalize Whether to normalize outgoing weights per neuron.
+     */
     networkBuilder(
         const Eigen::Vector3i& resSize = Eigen::Vector3i(3, 3, 5),
         const Eigen::Matrix2f& w = (Eigen::Matrix2f() << 3, 6, -2, -2).finished(),
@@ -44,6 +60,19 @@ public:
     }
 
 private:
+    /**
+     * @brief Builds connectivity, weights, and delays based on geometry.
+     * @param resSize Reservoir dimensions.
+     * @param w Weight matrix for E/I combinations.
+     * @param r0 Spatial decay radius.
+     * @param k0 Connection probability coefficients.
+     * @param f_inhibit Fraction of inhibitory neurons.
+     * @param tau Synaptic delay scaling.
+     * @param show Unused flag kept for compatibility.
+     * @param UC Optional user-defined pattern.
+     * @param UC_dims Dimensions of the user pattern.
+     * @param _normalize Whether to normalize outgoing weights per neuron.
+     */
     void build(
         const Eigen::Vector3i& resSize,
         const Eigen::Matrix2f& w,
@@ -188,6 +217,13 @@ private:
             << iIndices.size() << " inhibitory neurons." << std::endl;
     }
 
+    /**
+     * @brief Normalizes weights by the number of incoming connections per target neuron.
+     * @param X Source indices for each connection.
+     * @param Xn Destination indices for each connection.
+     * @param W Unnormalized weights.
+     * @return Weight vector scaled per destination neuron.
+     */
     std::vector<float> normalize_weights(
         const std::vector<int>& X,
         const std::vector<int>& Xn,
@@ -226,6 +262,9 @@ private:
         return W_normalized;
     }
 
+    /**
+     * @brief Populates lists of excitatory and inhibitory neuron indices.
+     */
     void compute_EI_indices() {
         eIndices.clear();
         iIndices.clear();
