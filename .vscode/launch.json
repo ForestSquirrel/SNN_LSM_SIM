@@ -1,0 +1,15 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "C/C++ Runner: Debug Session",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "args": [],
+      "stopAtEntry": false,
+      "console": "externalTerminal",
+      "cwd": "z:/SNN_CUDA_SIM/SNN_CUDA_SIM",
+      "program": "z:/SNN_CUDA_SIM/SNN_CUDA_SIM/build/Debug/outDebug"
+    }
+  ]
+}
