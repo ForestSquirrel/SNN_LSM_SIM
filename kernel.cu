@@ -1,9 +1,9 @@
 ﻿#define _USE_MATH_DEFINES
 
 // #define _LOAD 
-// #define _LOGGERS
+//#define _LOGGERS
 #define _SPIKE_OUT
-
+#define SOLVER_TYPE_HEUN
 
 #pragma once
 #include <vector>
@@ -15,7 +15,6 @@
 #include <iomanip>
 #include <thrust/fill.h>
 
-#include "core\Solver.cuh"
 #include "core\Neurons.cuh"
 #include "core\genericLayer.cuh"
 #include "core\networkBuilder.cuh"
@@ -28,49 +27,63 @@
 #include "help\balance3.h"
 #include "help\config_io.cuh"
 #include "help\crossingsCounter.cuh"
-#include"help\mnist_reader.h"
+#include "help\mnist_reader.h"
 
-#pragma region Helpers
-struct ComputeI {
-    float t;
-    float amp;
+// --- Common Constants for the HR Model (Host & Device access) ---
+struct HRConstants {
+    const float a, b, c, d, s, x0;
+    const float Iext_min, Iext_max;
+    const float r_min, r_max;
+
     __host__ __device__
-        ComputeI(float _amp, float _t) : amp(_amp), t(_t) {}
+        HRConstants(float a, float b, float c, float d, float s, float x0,
+            float Imin, float Imax, float rmin, float rmax) :
+        a(a), b(b), c(c), d(d), s(s), x0(x0),
+        Iext_min(Imin), Iext_max(Imax), r_min(rmin), r_max(rmax) {}
+};
+
+// --- Functor to Encode and Construct RHS Object ---
+struct RHS_Builder_Functor {
+    const HRConstants constants;
+
     __host__ __device__
-        float operator()(const float f_i) const {
-        float s = sinf(2.0f * M_PI * f_i * t);
-        return (s > 0) ? amp : 0.0f;
+        RHS_Builder_Functor(HRConstants consts) : constants(consts) {}
+
+    // Input: The packed data value (e.g., from dataValues[k])
+    // Output: A fully constructed HRNeuron_RHS functor
+    __host__ __device__
+        neuronModels::HRNeuron_RHS operator()(uint8_t dVal) const {
+
+        // 1. Decode Parameters (Identical to your MATLAB logic)
+        uint8_t i_int = dVal & 15;
+        uint8_t r_int = dVal >> 4;
+
+        float Iext = constants.Iext_min + ((float)i_int / 15.0f) * (constants.Iext_max - constants.Iext_min);
+
+        float r = constants.r_min + ((float)r_int / 15.0f) * (constants.r_max - constants.r_min);
+
+        return neuronModels::HRNeuron_RHS(
+            constants.a, constants.b, constants.c, constants.d,
+            r, constants.s, constants.x0
+        );
     }
 };
 
-struct LinspaceFunctor {
-    float f_min, step;
+struct Iext_Extractor_Functor {
+    const HRConstants constants;
+
     __host__ __device__
-        LinspaceFunctor(float _min, float _step) : f_min(_min), step(_step) {}
+        Iext_Extractor_Functor(HRConstants consts) : constants(consts) {}
+
     __host__ __device__
-        float operator()(int i) const {
-        return f_min + i * step;
+        float operator()(uint8_t dVal) const {
+        uint8_t i_int = dVal & 15;
+        // Iext scaling
+        return constants.Iext_min + ((float)i_int / 15.0f) * (constants.Iext_max - constants.Iext_min);
     }
 };
 
-thrust::device_vector<float> linspace(float min, float max, int N) {
-    thrust::device_vector<float> result(N);
-
-    if (N == 1) {
-        result[0] = min;
-        return result;
-    }
-    thrust::counting_iterator<int> idx_first(0);
-    thrust::counting_iterator<int> idx_last(N);
-
-    float step = (max - min) / (N - 1);
-    thrust::transform(idx_first, idx_last, result.begin(), LinspaceFunctor(min, step));
-
-    return result;
-};
-#pragma endregion
-
-using MNISTLoader = typename MNIST<float>;
+using MNISTLoader = typename MNIST<uint8_t>;
 
 int main() {
 
@@ -82,20 +95,6 @@ int main() {
     );
     mnist.load(MNISTLoader::PartitionType::ALL);
     mnist.sort(MNISTLoader::SortingType::REPEATING);
-    
-    /*
-    auto img = mnist.images().at(1);
-    auto label = mnist.labels().at(1);
-    std::cout << "Label: " << static_cast<int>(label) << "\n";
-
-    for (int y = 0; y < MNISTLoader::IMAGE_DIM; ++y) {
-        for (int x = 0; x < MNISTLoader::IMAGE_DIM; ++x) {
-            float pixel = img[y * MNISTLoader::IMAGE_DIM + x];
-            std::cout << (pixel > 128.0f ? '*' : ' ');
-        }
-        std::cout << '\n';
-    }
-    */
 
     using namespace neuronModels;
 
@@ -103,11 +102,9 @@ int main() {
     const int iN = mnist.PIXEL_COUNT;
 
     const float dt = 1e-2f;
-    const float T_end = 15e+3f * dt;
-    const int steps = static_cast<int>(T_end / dt);
+    const int steps = 15e+4;
+    const int transientSteps = 1e+6;
 
-    //auto f = linspace(0.08f, 0.08f, N);
-    float G_syn = 8e-4f;
 #ifndef _LOAD
     std::vector<int> UC = {};
     Eigen::Vector3i UC_dims(0, 0, 0);
@@ -147,26 +144,54 @@ int main() {
     loadLSM("cfg", inMap, lsmMap, lsmW, d_X, d_Xn, d_W);
 #endif 
     std::cout << "Simulation Steps: " << steps << "\n";
-        
-    genericLayer<MemTunnerNeuron> layer(N);
-    genericLayer<MemTunnerNeuron> inputLayer(iN);
+    
+    using inputLayerType = typename genericLayer<HRNeuron>;
+    using LSMLayerType = typename genericLayer<IzhNeuron>;
+
+    LSMLayerType layer(N);
+    inputLayerType inputLayer(iN);
 
     SparsePropagator sp;
     sp.init();
-    sp.buildCSR(inMap, lsmMap, thrust::device_vector<int>(inMap.size(), 1.0f), "IToLSM", inputLayer.size(), layer.size());
+    sp.buildCSR(inMap, lsmMap, thrust::device_vector<int>(inMap.size(), 30.0f), "IToLSM", inputLayer.size(), layer.size());
     sp.buildCSR(d_X, d_Xn, d_W, "LSMToLSM", layer.size(), layer.size());
 
-    MemTunnerNeuron_RHS rhs(-0.1f, 17e-3f, 13e-3f);
+    // ----- IZH -----
+    const float aIZH = 0.05f;//0.02f; 0.1f
+    const float bIZH = 0.2f;//0.2f;
+    const float cIZH = -65.0f;
+    const float dIZH = 2.0f;
+    const float initV = -65.0f;
+    const float initU = initV * bIZH;
+    IzhNeuron_RHS rhs(aIZH, bIZH, cIZH, dIZH);
+
+    // ----- HR -----
+    const float aHR = 1.0f;
+    const float bHR = 3.0f;
+    const float cHR = 1.0f;
+    const float dHR = 5.0f;
+    const float sHR = 4.0f;
+
+    const float Iext_range_min = 1.8f;
+    const float Iext_range_max = 2.1f;
+    const float r_range_min = 0.0013f;
+    const float r_range_max = 0.007f;
+
+    const float initX = -1.6f;
+    const float initY = -12.0f;
+    const float initZ = 0.0f;
+
+    HRConstants host_consts(aHR, bHR, cHR, dHR, sHR, initX,
+        Iext_range_min, Iext_range_max, r_range_min, r_range_max);
 #pragma region Log
 #ifdef _LOGGERS
-    layerLogger_sync<genericLayer<MemTunnerNeuron>> logger(layer, "FHN_layer", Mode::ACCUMULATE_AND_FINALIZE);
+    layerLogger_sync<layerType> logger(layer, "layer", Mode::ACCUMULATE_AND_FINALIZE);
     //layerLogger_sync<genericLayer<MemTunnerNeuron>> inputLogger(inputLayer, "input_layer", Mode::ACCUMULATE_AND_FINALIZE);
     logger.start();
     //inputLogger.start();
 #endif  
 #pragma endregion
-    crossingsCounter<genericLayer<MemTunnerNeuron>, 0> cs(layer, 0.2f, CounterBehavior::BELOW_THR);
-
+    crossingsCounter<LSMLayerType, 0> cs(layer, 25.0f, CounterBehavior::BELOW_THR);
 #pragma region OUTPUT
 #ifdef _SPIKE_OUT
     std::ofstream csvFile("MNIST_FEATURES.csv");
@@ -184,43 +209,50 @@ int main() {
     }
 #endif // _SPIKE_OUT
 #pragma endregion
-    std::vector<float> image(iN);
-    thrust::device_vector<float> f(iN);
+    std::vector<uint8_t> h_image(iN);
+    thrust::device_vector<uint8_t> d_image(iN);
+    thrust::device_vector<HRNeuron_RHS> rhs_collection(iN);
+    thrust::device_vector<float> Iext_vector(iN);
+
     int totalImages = 1;
     for (int imgIdx = 0; imgIdx < totalImages; ++imgIdx) {
-        image = mnist.images().at(imgIdx);
-        thrust::copy(image.begin(), image.end(), f.begin());
-        thrust::transform(f.begin(), f.end(), thrust::make_constant_iterator(2550.0f), f.begin(), thrust::divides<float>());
+        h_image = mnist.images().at(imgIdx);
+
+        thrust::copy(h_image.begin(), h_image.end(), d_image.begin());
+
+        thrust::transform(d_image.begin(), d_image.end(), rhs_collection.begin(), RHS_Builder_Functor(host_consts));
+        thrust::transform(d_image.begin(), d_image.end(), inputLayer.input().begin(), Iext_Extractor_Functor(host_consts));
 
         // Reset LSM
-        thrust::fill(inputLayer.state_vec<0>().begin(), inputLayer.state_vec<0>().end(), 0.0f);
-        thrust::fill(inputLayer.state_vec<1>().begin(), inputLayer.state_vec<0>().end(), 0.0f);
-        thrust::fill(inputLayer.input().begin(), inputLayer.input().end(), 0.0f);
-        thrust::fill(layer.state_vec<0>().begin(), layer.state_vec<0>().end(), 0.0f);
-        thrust::fill(layer.state_vec<1>().begin(), layer.state_vec<0>().end(), 0.0f);
+        thrust::fill(inputLayer.state_vec<0>().begin(), inputLayer.state_vec<0>().end(), initX);
+        thrust::fill(inputLayer.state_vec<1>().begin(), inputLayer.state_vec<1>().end(), initY);
+        thrust::fill(inputLayer.state_vec<2>().begin(), inputLayer.state_vec<2>().end(), initZ);
+
+        thrust::fill(layer.state_vec<0>().begin(), layer.state_vec<0>().end(), initV);
+        thrust::fill(layer.state_vec<1>().begin(), layer.state_vec<1>().end(), initU);
         thrust::fill(layer.input().begin(), layer.input().end(), 0.0f);
+
+        for (int tt = 0; tt < transientSteps; ++tt) {
+            inputLayer.step_heterogeneous(rhs_collection, (float)tt * dt, dt);
+            print_nested_progress(imgIdx, totalImages, tt, steps + transientSteps, 30, R"(MNIST images)", R"(Single image)");
+        }
 
         for (int step = 0; step < steps; ++step) {
             float t = step * dt;
 
-            thrust::transform(f.begin(), f.end(), inputLayer.input().begin(), ComputeI(660.0f * 1e-7f, t));
-            inputLayer.step(rhs, t, dt);
-#pragma region Log
-#ifdef _LOGGERS 
-            //inputLogger.write(step);
-#endif  
-#pragma endregion
-            sp.propagate<0, MemTunnerNeuron, MemTunnerNeuron>(inputLayer, layer, "IToLSM", InputBehavior::INPUT_ADD);
-            thrust::transform(layer.input().begin(), layer.input().end(), thrust::make_constant_iterator(G_syn), layer.input().begin(), thrust::multiplies<float>());
+            inputLayer.step_heterogeneous(rhs_collection, t, dt);
+
+            sp.propagate<0, HRNeuron, IzhNeuron>(inputLayer, layer, "IToLSM", PropagationMode::CHEMICAL_LINEAR_FORWARD, InputBehavior::INPUT_ADD);
+            thrust::transform(layer.input().begin(), layer.input().end(), thrust::make_constant_iterator(2.0f), layer.input().begin(), thrust::multiplies<float>());
 #pragma region Log
 #ifdef _LOGGERS
             logger.write(step);
 #endif  
 #pragma endregion
             layer.step(rhs, t, dt);
-            sp.propagate<0, MemTunnerNeuron, MemTunnerNeuron>(layer, layer, "LSMToLSM", InputBehavior::INPUT_OVERRIDE);
+            sp.propagate<0, IzhNeuron, IzhNeuron>(layer, layer, "LSMToLSM", PropagationMode::ELECTRICAL_LINEAR_BIDIRECTIONAL, InputBehavior::INPUT_OVERRIDE);
             cs.count(step);
-            print_nested_progress(imgIdx, totalImages, step, steps, 30, R"(Image processing)", R"(MNIST images)");
+            print_nested_progress(imgIdx, totalImages, transientSteps + step, steps + transientSteps, 30, R"(MNIST images)", R"(Single image)");
         }
 #pragma region OUTPUT
 #ifdef _SPIKE_OUT
@@ -239,9 +271,9 @@ int main() {
 #endif // _SPIKE_OUT
 #pragma endregion
         cs.reset();
-        print_nested_progress(imgIdx, totalImages, steps, steps, 30, R"(Image processing)", R"(MNIST images)");
+        print_nested_progress(imgIdx, totalImages, steps + transientSteps, steps + transientSteps, 30, R"(MNIST images)", R"(Single image)");
     }
-    print_nested_progress(totalImages, totalImages, steps, steps, 30, R"(Image processing)", R"(MNIST images)");
+    print_nested_progress(totalImages, totalImages, steps + transientSteps, steps + transientSteps, 30, R"(MNIST images)", R"(Single image)");
 #pragma region Log    
 #ifdef _LOGGERS
     logger.stop();

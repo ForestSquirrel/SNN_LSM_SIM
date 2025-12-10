@@ -86,7 +86,7 @@
     <CudaCompile Include="core\layerLogger_sync.cuh" />
     <CudaCompile Include="core\Neurons.cuh" />
     <CudaCompile Include="core\Propagators\Propogate.cuh" />
-    <CudaCompile Include="core\Solver.cuh" />
+    <CudaCompile Include="core\Solvers\RK4_Solver.cuh" />
     <CudaCompile Include="kernel.cu" />
   </ItemGroup>
   <ItemGroup>
@@ -95,6 +95,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="core\Propagators\SparsePropagator.cuh" />
+    <ClInclude Include="core\Solvers\Heun_Solver.cuh" />
+    <ClInclude Include="core\Solvers\SolverCommon.cuh" />
+    <ClInclude Include="core\Solvers\solver_utils.cuh" />
     <ClInclude Include="help\balance3.h" />
     <ClInclude Include="help\config_io.cuh" />
     <ClInclude Include="help\crossingsCounter.cuh" />

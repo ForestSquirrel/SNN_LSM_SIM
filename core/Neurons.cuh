@@ -32,7 +32,83 @@ namespace neuronModels {
             thrust::get<1>(ddt_out) = dvdt;
         }
     };
+    // ----------- Izhikevich ----------------
+    /**
+     * State tuple for the Izhikevich model (v, u).
+     */
+    using IzhNeuron = StateTuple<float, float>;
 
+    /**
+     * Right-hand side functor for Izhikevich neuron model.
+     * @see IzhNeuron
+     */
+    struct IzhNeuron_RHS {
+        const float a, b, c, d;
+
+        __host__ __device__
+            IzhNeuron_RHS(float a, float b, float c, float d) :
+            a(a), b(b), c(c), d(d) {}
+
+        __host__ __device__ inline
+            void operator()(const IzhNeuron& state_in, IzhNeuron& ddt_out, float I_syn, float t) const {
+            float v = thrust::get<0>(state_in);
+            float u = thrust::get<1>(state_in);
+
+            float dvdt = 0.04f * v * v + 5 * v + 140 - u + I_syn;
+            float dudt = a * (b*v - u);
+
+            thrust::get<0>(ddt_out) = dvdt;
+            thrust::get<1>(ddt_out) = dudt;
+        }
+
+        __host__ __device__ inline
+            void reset(IzhNeuron& state_in) const {
+            float v = thrust::get<0>(state_in);
+            float u = thrust::get<1>(state_in);
+
+            if (v >= 30){
+                v = c;
+                u = u + d;
+            }
+
+            thrust::get<0>(state_in) = v;
+            thrust::get<1>(state_in) = u;
+        }
+    };
+
+/**
+ * State tuple for the HR model (x, y, z).
+ */
+    using HRNeuron = StateTuple<float, float, float>;
+
+    /**
+     * Right-hand side functor for the HR neuron model.
+     * @see HRNeuronn
+     */
+    struct HRNeuron_RHS {
+        float a, b, c, d, r, s, x0;
+        __host__ __device__
+            HRNeuron_RHS() = default;
+
+        __host__ __device__
+            HRNeuron_RHS(float a, float b, float c, float d, float r, float s, float x0) :
+            a(a), b(b), c(c), d(d), r(r), s(s), x0(x0) {}
+
+        __host__ __device__ inline
+            void operator()(const HRNeuron& state_in, HRNeuron& ddt_out, float I_syn, float t) const {
+            float x = thrust::get<0>(state_in);
+            float y = thrust::get<1>(state_in);
+            float z = thrust::get<2>(state_in);
+
+            float dxdt = y - a * x * x * x + b * x * x - z + I_syn;
+            float dydt = c - d * x * x - y;
+            float dzdt = r * (s * (x - x0) - z);
+
+            thrust::get<0>(ddt_out) = dxdt;
+            thrust::get<1>(ddt_out) = dydt;
+            thrust::get<2>(ddt_out) = dzdt;
+        }
+    };
     // ----------- O R L O V S K I I ----------
     /**
      * State tuple for the memristor-based tunneling neuron (Vc, XSV).

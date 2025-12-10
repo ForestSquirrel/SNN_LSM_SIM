@@ -1,5 +1,4 @@
 #pragma once
-#include "../core/Solver.cuh"
 #include <thrust/device_vector.h>
 #include <thrust/for_each.h>
 #include <thrust/copy.h>
@@ -15,7 +14,7 @@
 #include <numeric>
 #include <stdexcept>
 #include <cuda_runtime.h>
-
+#include "../core/Solvers/SolverCommon.cuh"
 /**
  * Generic layer wrapper holding neuron states and inputs.
  * @tparam StateTypes Thrust tuple describing the per-neuron state variables.
@@ -179,7 +178,43 @@ public:
         thrust::for_each(pol,
             this->full_zip_begin(),
             this->full_zip_end(),
-            RK4_Step_Functor<RHS_Functor, StateTypes>(t, dt, rhs));
+            Solver_Step_Functor<RHS_Functor, StateTypes>(t, dt, rhs));
+    }
+
+    /**
+     * Advance the layer state using per-neuron physical parameters.
+     *
+     * @tparam RHS_Functor The type of the functor stored in the collection.
+     * @param rhs_collection Device vector of RHS functors (must be size NNeurons_).
+     * @param t Current time.
+     * @param dt Time step.
+     * @param stream CUDA stream.
+     */
+    template<typename RHS_Functor>
+    void step_heterogeneous(const thrust::device_vector<RHS_Functor>& rhs_collection,
+        float t, float dt, cudaStream_t stream = 0) {
+
+        if (rhs_collection.size() != NNeurons_) {
+            // throw err
+            return;
+        }
+
+        auto pol = thrust::cuda::par.on(stream);
+
+        auto state_input_iter = this->full_zip_begin();
+        auto grand_zip_begin = thrust::make_zip_iterator(
+            thrust::make_tuple(state_input_iter, rhs_collection.begin())
+        );
+
+        auto grand_zip_end = thrust::make_zip_iterator(
+            thrust::make_tuple(this->full_zip_end(), rhs_collection.end())
+        );
+
+        thrust::for_each(pol,
+            grand_zip_begin,
+            grand_zip_end,
+            Heterogeneous_Solver_Step_Functor<StateTypes>(t, dt)
+        );
     }
 
     /**
